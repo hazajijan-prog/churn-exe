@@ -67,7 +67,10 @@ jobs:
           name: modell-${{ github.sha }}
           path: outputs/
 
-      - run: python -m churn.evaluate
+      - name: Testa kvalitetsgrinden
+        env:
+          MIN_ROC_AUC: "0.99"
+        run: python -m churn.evaluate
 
       - name: Visa mätvärden i Summary
         if: always()
