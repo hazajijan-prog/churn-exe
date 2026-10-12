@@ -10,3 +10,9 @@ def test_forvantade_kolumner_finns():
 
 def test_malvariabeln_ar_binar():
     assert set(las_data()[MAL].unique()) <= {0, 1}
+
+def test_kundid_och_alder():
+    df = las_data()
+
+    assert df["kund_id"].is_unique
+    assert df["alder"].between(18, 100).all()

@@ -29,3 +29,24 @@ def test_reproducerbar(resultat):
     _, igen = trana_och_utvardera()
     assert igen == matvarden
 
+from sklearn.dummy import DummyClassifier
+from sklearn.metrics import roc_auc_score
+from sklearn.model_selection import train_test_split
+
+
+def test_modellens_prestanda(resultat):
+    _, matvarden = resultat
+
+    assert matvarden["roc_auc"] >= 0.70
+
+    X, y = dela_upp(skapa_features(las_data()))
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.25, random_state=42, stratify=y
+    )
+
+    dummy = DummyClassifier(strategy="prior")
+    dummy.fit(X_train, y_train)
+
+    dummy_auc = roc_auc_score(y_test, dummy.predict_proba(X_test)[:, 1])
+
+    assert matvarden["roc_auc"] > dummy_auc
