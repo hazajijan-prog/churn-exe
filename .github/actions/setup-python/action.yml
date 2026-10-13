@@ -1,0 +1,19 @@
+name: "Installera Python och paket"
+description: "Återanvändbar installation för CI-jobb"
+
+inputs:
+  python-version:
+    description: "Python-version"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+        cache: pip
+        cache-dependency-path: pyproject.toml
+
+    - run: pip install -e ".[dev]"
+      shell: bash
