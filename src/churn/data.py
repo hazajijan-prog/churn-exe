@@ -39,3 +39,5 @@ def dela_upp(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]:
     return df[FEATURES], df[MAL]
 
 # Test av CI-filter
+
+# Concurrency-test 1
