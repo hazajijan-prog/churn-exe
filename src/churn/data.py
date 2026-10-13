@@ -41,3 +41,5 @@ def dela_upp(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]:
 # Test av CI-filter
 
 # Concurrency-test 1
+
+# Concurrency-test 2
