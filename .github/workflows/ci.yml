@@ -22,8 +22,29 @@ on:
       - "pyproject.toml"
       - ".github/workflows/**"
 
+  schedule:
+  - cron: "0 4 * * 1"
+  - cron: "0 5 * * 1"
+
+  workflow_dispatch:
+
 jobs:
+  tidkontroll:
+    runs-on: ubuntu-latest
+    outputs:
+      kor: ${{ steps.kolla.outputs.kor }}
+    steps:
+      - id: kolla
+        run: |
+          if [[ "${{ github.event_name }}" != "schedule" ]] || [[ "$(TZ=Europe/Stockholm date +%H)" == "06" ]]; then
+            echo "kor=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "kor=false" >> "$GITHUB_OUTPUT"
+          fi
+
   test:
+    needs: tidkontroll
+    if: needs.tidkontroll.outputs.kor == 'true'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -95,3 +116,32 @@ jobs:
             cat outputs/matvarden.json >> "$GITHUB_STEP_SUMMARY"
             echo '```' >> "$GITHUB_STEP_SUMMARY"
           fi
+
+  ringlista:
+    needs: utvardera
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: "pyproject.toml"
+
+      - run: pip install -e ".[dev]"
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: modell-${{ github.sha }}
+          path: outputs/
+
+      - name: Skapa ringlista
+        run: python -m churn.score
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ringlista-${{ github.sha }}
+          path: outputs/ringlista.csv
