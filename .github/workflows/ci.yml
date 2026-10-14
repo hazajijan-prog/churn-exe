@@ -12,6 +12,7 @@ on:
       - "tests/**"
       - "pyproject.toml"
       - ".github/workflows/**"
+      - "kontroller/**"
 
   pull_request:
     branches: [main]
@@ -21,12 +22,22 @@ on:
       - "tests/**"
       - "pyproject.toml"
       - ".github/workflows/**"
+      - "kontroller/**"
 
   schedule:
   - cron: "0 4 * * 1"
   - cron: "0 5 * * 1"
 
   workflow_dispatch:
+    inputs:
+      datafil:
+        description: "Välj CSV-fil för datakontroll"
+        required: true
+        type: choice
+        default: "data/kundbas.csv"
+        options:
+          - "data/kundbas.csv"
+          - "data/kundbas_ny_leverans.csv"
 
 jobs:
   tidkontroll:
@@ -58,8 +69,24 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - run: pytest
 
-  training:
+  datakontroll:
     needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup-python
+        with:
+          python-version: "3.11"
+
+      - name: Validera kunddata med Pandera
+        env:
+          DATAFIL: ${{ inputs.datafil || 'data/kundbas.csv' }}
+        run: python kontroller/schema.py "$DATAFIL"
+
+  training:
+    needs: datakontroll
     runs-on: ubuntu-latest
 
     steps:
